@@ -23,7 +23,7 @@ jobs:
         uses: ruby/setup-ruby@v1.110.0
         with:
           ruby-version: 3.1.1
-      - run: apk add python3
+
       - uses: Borales/actions-yarn@v3.0.0
         with:
           cmd: install
