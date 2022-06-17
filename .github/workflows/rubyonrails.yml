@@ -65,6 +65,7 @@ jobs:
 
   infra:
     name: infra
+    needs: test
     runs-on: ubuntu-latest
     env:
       TAG: "${{ github.sha }}"
@@ -86,6 +87,6 @@ jobs:
         uses: easingthemes/ssh-deploy@main
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
-          REMOTE_HOST: ip-10-34-22-35.ec2.internal
+          REMOTE_HOST: 10.34.22.35
           REMOTE_USER: ubuntu
-
+      - run: rails server
