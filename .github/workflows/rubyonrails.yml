@@ -1,4 +1,18 @@
 name: CI
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  AWS_REGION: us-east-1
+  AWS_MFA_ENABLED: false
+  ENV: dev01
+  RAILS_ENV: staging
+  NAMESPACE: gameon
+  SSH_PUBLIC_KEY: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCSfpiZiClM5v1YjYvb8H9JOrm40lhzs86EcPVx00Et64rQKqN9FK0yxc1+KtQ3JRNT+FsDft+irIxv2AkSsDRGAncIX4U3crwH2MqNCSQYwvDbGGjg7D+GcqY94q6YsfLR8nDkWZUVrVzT9v0K8Dly/ka6OfLjeqk504mcAgPZH6pzjpp25EnmYDVqH4NUKBYz5WmJVzAb7CWQS1+qUG5E+Jj7REtw5NVt4jwBALFh6FLOwwm8aj/1ysG6ISZeEWXXGkk7UnpseMdOuPdNGrNKguQXxtpqZO7V+vnCTdUhdCW7j2pYOHT9yl/dg/xXA7T6lvsjBBbTYKNuOGsZCyuN muharrem"
+
+
 on:
 
   push:
@@ -7,6 +21,7 @@ on:
     branches: [ main ]
 
 jobs:
+  
   test:
     runs-on: ubuntu-latest
 
@@ -48,4 +63,29 @@ jobs:
           bundle exec rails db:prepare --trace
           bundle exec rails test
 
+  infra:
+    name: infra
+    runs-on: ubuntu-latest
+    env:
+      TAG: "${{ github.sha }}"
+
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}
+          aws-region: ${{ env.AWS_REGION }}
+      - uses: actions/checkout@v3
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1.110.0
+        with:
+          ruby-version: 3.1.1
+          bundler-cache: true
+      - name: Deploy to Staging server
+        uses: easingthemes/ssh-deploy@main
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          REMOTE_HOST: ip-10-34-22-35.ec2.internal
+          REMOTE_USER: ubuntu
 
